@@ -1,14 +1,28 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import '../Models/task.dart';
 
-class TasksScreen extends StatelessWidget {
+class TasksScreen extends StatefulWidget {
   const TasksScreen({super.key});
 
+  @override
+  State<TasksScreen> createState() => _TasksScreenState();
+}
+
+class _TasksScreenState extends State<TasksScreen> {
+  String? newTaskTitle;
+  List<Task> taskList=[
+    Task(title: "Is Book"),
+    Task(title: "Is Plant"),
+    Task(title: "Is Animal"),
+  ];
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.orange,
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
+        onPressed: ()         {
           showModalBottomSheet(context: context,
           //isScrollControlled: true,
            builder: ((context) {
@@ -49,8 +63,18 @@ class TasksScreen extends StatelessWidget {
                         textAlign: TextAlign.center,
                         autofocus: true,
                         cursorColor: Colors.orange,
+                        onChanged: (newTitle){
+                          newTaskTitle=newTitle;
+                        },
                       ),
-                      ElevatedButton(onPressed: null, 
+                      ElevatedButton(
+                      onPressed: (() {
+                        setState(() {
+                          taskList.add(Task(title: newTaskTitle.toString()));
+                        });
+                        Navigator.pop(context);
+                        
+                      }), 
                       style: ButtonStyle(
                        padding: MaterialStateProperty.all( EdgeInsets.all(20.0)),
                        backgroundColor: MaterialStateProperty.all(Colors.orange),
@@ -108,7 +132,7 @@ class TasksScreen extends StatelessWidget {
               height: 10,
             ),
             Text(
-              "12 Tasks",
+              "${taskList.length.toString()} Tasks",
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 20.0
@@ -120,7 +144,20 @@ class TasksScreen extends StatelessWidget {
             Expanded(
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 20.0,vertical: 20.0),
-                child: TaskTile(),
+                child: ListView.builder(
+                  itemCount: taskList.length,
+                  itemBuilder: ((context, index) {
+                    return TaskTile(Tasktile: taskList[index].title,ischecked: taskList[index].isDone,
+                    checkboxCallback: (checckboxSate){
+                      setState(() {
+                        taskList[index].toggle();
+                        taskList.removeAt(index);
+                      
+                      });
+                    });
+                  }),
+
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.only(
@@ -138,62 +175,30 @@ class TasksScreen extends StatelessWidget {
   }
 }
 
+
 class TaskTile extends StatelessWidget {
-  const TaskTile({
-    Key? key,
-  }) : super(key: key);
+  final bool ischecked;
+  final String Tasktile;
+  final Function checkboxCallback;
+  TaskTile({
+    required this.Tasktile,
+    required this.ischecked,
+    required this.checkboxCallback,
 
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-    
-      children: [
-        ListTile(
-          title: Text("This is task ",),
-          trailing: CheckBox(),
+  });
 
-      ),
-      ListTile(
-          title: Text("This is task ",
-          ),
-          trailing: CheckBox(),
-
-      ),
-      ListTile(
-          title: Text("This is task ",
-          ),
-          trailing: CheckBox(),
-      ),
-      ],
-    );
-  }
-}
-
-class CheckBox extends StatefulWidget {
-  @override
-  State<CheckBox> createState() => _CheckBoxState();
-}
-
-class _CheckBoxState extends State<CheckBox> {
  
-  bool isCheckedBox=false;
-  @override  
+  @override
   Widget build(BuildContext context) {
-    print(isCheckedBox);
-    return Checkbox(
-      fillColor: MaterialStateProperty.all(Colors.orange),
-      value: isCheckedBox,
-      onChanged: (ischecked){
-        setState(() {
-         //isCheckedBox=true;
-         if(isCheckedBox){
-          isCheckedBox=false;
-         }
-         else{
-          isCheckedBox=true;
-         }
-        });
-      },
-      );
-  }
+    return ListTile(
+          title: Text(Tasktile,style: TextStyle(decoration: (ischecked)?TextDecoration.lineThrough:null),),
+          trailing: Checkbox(
+              fillColor: MaterialStateProperty.all(Colors.orange),
+              value: ischecked,
+              onChanged: (newValue){
+                checkboxCallback(newValue);
+              },
+             ));
+      
+}
 }
